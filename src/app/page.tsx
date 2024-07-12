@@ -25,6 +25,7 @@ import {
   Sponsor,
   seasonsQuery,
   Season,
+  Matchweek,
 } from "@/lib/queries";
 import { urlForImage } from "@/lib/utils";
 import React from "react";
@@ -104,7 +105,7 @@ export default async function Home() {
   ]);
   const home = nav.pages.find((p) => p.id === "home");
   const currentSeason = seasons?.find((season) => season.main == true);
-  let closestMatchweek = null;
+  let closestMatchweek: Matchweek | null = null;
   const sortedLeagueTable = currentSeason?.league_table
     ?.slice()
     .sort((a, b) => b.points - a.points);
