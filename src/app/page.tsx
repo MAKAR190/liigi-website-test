@@ -620,7 +620,7 @@ export default async function Home() {
               <>
                 {section?.id === "banner" && (
                   <>
-                    <div className="sm:flex md:flex lg:hidden xl:hidden xxl:hidden sm:h-[35rem] md:h-[49rem]  [perspective:1000px] relative b flex flex-col max-w-5xl mx-auto w-full  items-start justify-start my-40">
+                    <div className="sm:flex md:flex lg:hidden xl:hidden xxl:hidden sm:h-[40rem] md:h-[49rem]  [perspective:1000px] relative b flex flex-col max-w-5xl mx-auto w-full  items-start justify-start my-40">
                       <Tabs tabs={tabs} />
                     </div>
                     <div className="sm:hidden md:hidden lg:flex xl:flex xxl:flex">
