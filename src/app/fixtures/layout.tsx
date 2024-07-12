@@ -11,10 +11,9 @@ import { sanityFetch } from "@/lib/fetch";
 import { generalQuery, generalResponse } from "@/lib/queries";
 import { urlForImage } from "@/lib/utils";
 
-export async function generateMetadata({
-  params,
-  searchParams,
-}: Props): Promise<Metadata> {
+export async function generateMetadata(
+  parent: ResolvingMetadata
+): Promise<Metadata> {
   const [general] = await Promise.all([
     sanityFetch<generalResponse>({
       query: generalQuery,
