@@ -465,7 +465,7 @@ export default async function Home() {
         <div className="w-full">
           <div className="animated-gradient relative group">
             <Link
-              href={`/fxtures?matchweek=${closestMatchweek?.name.toLowerCase()}`}
+              href={`/fixtures?matchweek=${closestMatchweek?.name.toLowerCase()}`}
             >
               <h2
                 className={`text-center group-hover:underline cursor-pointer text-white xl:text-4xl md:text-4xl sm:text-3xl lg:text-4xl py-5 font-bold ${kanit_bold.className}`}

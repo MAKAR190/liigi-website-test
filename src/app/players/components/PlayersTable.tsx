@@ -1,9 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Player } from "@/lib/queries";
 import countries from "world-countries";
 import Flag from "react-world-flags";
-import InfiniteScroll from "react-infinite-scroll-component";
 import { urlForImage } from "@/lib/utils";
 import Link from "next/link";
 import { inter, kanit } from "@/fonts";
@@ -50,6 +49,7 @@ const PlayersPage: React.FC<PlayersPageProps> = ({
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
+  const observer = useRef<IntersectionObserver | null>(null);
 
   const filterPlayers = () => {
     const lowerSearchClub = searchClub?.toLowerCase();
@@ -83,45 +83,56 @@ const PlayersPage: React.FC<PlayersPageProps> = ({
   useEffect(() => {
     setLoading(true); // Set loading to true before filtering
     const filtered = filterPlayers();
-    setFilteredPlayers(filtered.slice(0, 7));
-    setHasMore(filtered.length > 7);
+    setFilteredPlayers(filtered.slice(0, 3));
+    setHasMore(filtered.length > 3);
     setLoading(false); // Set loading to false after filtering is done
   }, [players, searchClub, searchName, searchSeason]);
 
-  const fetchMorePlayers = () => {
+  const fetchMorePlayers = useCallback(() => {
     const currentLength = filteredPlayers.length;
     const filtered = filterPlayers();
 
-    const newPlayers = filtered.slice(currentLength, currentLength + 7);
+    const newPlayers = filtered.slice(currentLength, currentLength + 3);
     setFilteredPlayers((prev) => [...prev, ...newPlayers]);
-    setHasMore(currentLength + 7 < filtered.length);
-  };
+    setHasMore(currentLength + 3 < filtered.length);
+  }, [filteredPlayers, players, searchClub, searchName, searchSeason]);
+
+  const lastPlayerRef = useCallback(
+    (node:any) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          fetchMorePlayers();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, fetchMorePlayers]
+  );
 
   return (
     <div className="overflow-x-auto my-5">
-      <InfiniteScroll
-        dataLength={filteredPlayers.length}
-        next={fetchMorePlayers}
-        hasMore={hasMore}
-        loader={<p></p>}
-      >
-        <table className="min-w-full bg-white border-collapse shadow-md">
-          <thead>
-            <tr
-              className={`bg-gray-100 text-gray-600 text-sm leading-normal ${kanit.className}`}
-            >
-              <th className="py-3 px-6 text-left">Player</th>
-              <th className="py-3 px-6 text-left">Nationality</th>
-              <th className="py-3 px-6 text-left">Age</th>
-              <th className="py-3 px-6 text-left">Height (cm)</th>
-              <th className="py-3 px-6 text-left">Position</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-600 text-sm font-light">
-            {filteredPlayers.map((player) => (
+      <table className="min-w-full bg-white border-collapse shadow-md">
+        <thead>
+          <tr
+            className={`bg-gray-100 text-gray-600 text-sm leading-normal ${kanit.className}`}
+          >
+            <th className="py-3 px-6 text-left">Player</th>
+            <th className="py-3 px-6 text-left">Nationality</th>
+            <th className="py-3 px-6 text-left">Age</th>
+            <th className="py-3 px-6 text-left">Height (cm)</th>
+            <th className="py-3 px-6 text-left">Position</th>
+          </tr>
+        </thead>
+        <tbody className="text-gray-600 text-sm font-light">
+          {filteredPlayers.map((player, index) => {
+            const isLastPlayer = filteredPlayers.length === index + 1;
+            return (
               <tr
                 key={player._id}
                 className={`${inter.className} font-medium border-b border-gray-200 hover:bg-gray-100`}
+                ref={isLastPlayer ? lastPlayerRef : null}
               >
                 <td className="py-3 px-6 text-left whitespace-nowrap">
                   <Link
@@ -165,10 +176,10 @@ const PlayersPage: React.FC<PlayersPageProps> = ({
                 </td>
                 <td className="py-3 px-6 text-left">{player.position}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </InfiniteScroll>
+            );
+          })}
+        </tbody>
+      </table>
       {!loading && !filteredPlayers.length && (
         <p className="text-center font-semibold my-5">
           No players have been found for this request
