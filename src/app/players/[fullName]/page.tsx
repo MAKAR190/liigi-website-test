@@ -200,7 +200,7 @@ export default async function PlayerPage({
               </div>
               <div className="absolute bottom-0 left-0">
                 <div className="flex">
-                  {player?.social_media.map((social) => (
+                  {player?.social_media?.map((social) => (
                     <a href={social.url} target="_blank">
                       <Image
                         width={25}

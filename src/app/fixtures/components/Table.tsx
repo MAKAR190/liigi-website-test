@@ -19,49 +19,80 @@ const Table: React.FC<PlayersPageProps> = ({
   matchweekParam,
 }) => {
   const [hasMore, setHasMore] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1); // Track current page for pagination
+  const [currentPage, setCurrentPage] = useState(1);
   const [fixturesToShow, setFixturesToShow] = useState<Fixture[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // Track loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const [matchweeks, setMatchweeks] = useState<Matchweek[]>([]);
+
+  const fixturesPerPage = 10;
+
   // Find the matching season based on seasonParam
   const searchSeason =
     seasons?.find((season) => season.season === seasonParam) ||
     seasons?.find((season) => season.main === true);
 
+  // Load matchweeks based on season and matchweekParam
   useEffect(() => {
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
-    // Fetch all matchweeks if matchweekParam is not specified or is "all matchweeks"
     if (!matchweekParam || matchweekParam === "all matchweeks") {
       const allMatchweeks = searchSeason?.matchweeks || [];
       setMatchweeks(allMatchweeks);
     } else {
-      // Fetch specific matchweek based on matchweekParam
-      const selectedMatchweek = searchSeason?.matchweeks.find(
-        (matchweek) => matchweek.name.toLowerCase() === matchweekParam
+      const selectedMatchweek = searchSeason?.matchweeks?.find(
+        (matchweek) =>
+          matchweek.name.toLowerCase() === matchweekParam.toLowerCase()
       );
       setMatchweeks(selectedMatchweek ? [selectedMatchweek] : []);
     }
-    setIsLoading(false); // Finish loading
+
+    setIsLoading(false);
   }, [seasons, seasonParam, matchweekParam]);
 
-  const [matchweeks, setMatchweeks] = useState<Matchweek[]>(
-    searchSeason?.matchweeks || []
-  );
-
+  // Load initial fixtures when matchweeks change
   useEffect(() => {
-    const newFixturesToShow = matchweeks.flatMap(
-      (matchweek) => matchweek.days?.flatMap((day) => day.fixtures) || []
-    );
-    setFixturesToShow(newFixturesToShow);
-    setCurrentPage(1);
+    if (matchweeks.length > 0) {
+      loadInitialFixtures();
+    }
   }, [matchweeks]);
 
-  useEffect(() => {
-    // Load initial fixtures to show if matchweeks are available
-    if (matchweeks.length > 0) {
-      loadMoreFixtures();
-    }
-  }, [matchweeks, seasonParam]); // Trigger when matchweeks or seasonParam changes
+  // Function to load initial fixtures
+  const loadInitialFixtures = () => {
+    setIsLoading(true);
+
+    const initialFixturesToShow = matchweeks
+      .flatMap(
+        (matchweek) => matchweek.days?.flatMap((day) => day.fixtures) || []
+      )
+      .slice(0, fixturesPerPage);
+
+    setFixturesToShow(initialFixturesToShow);
+    setCurrentPage(1);
+    setHasMore(initialFixturesToShow.length === fixturesPerPage);
+    setIsLoading(false);
+  };
+
+  // Function to load more fixtures
+  const loadMoreFixtures = () => {
+    setIsLoading(true);
+
+    const startIndex = currentPage * fixturesPerPage;
+    const endIndex = startIndex + fixturesPerPage;
+
+    const newFixturesToShow = matchweeks
+      .flatMap(
+        (matchweek) => matchweek.days?.flatMap((day) => day.fixtures) || []
+      )
+      .slice(startIndex, endIndex);
+
+    setFixturesToShow((prevFixtures) => [
+      ...prevFixtures,
+      ...newFixturesToShow,
+    ]);
+    setCurrentPage((prevPage) => prevPage + 1);
+    setHasMore(newFixturesToShow.length === fixturesPerPage);
+    setIsLoading(false);
+  };
 
   const isMatchStarted = (scheduledDateTime: any) => {
     const now = new Date();
@@ -86,32 +117,20 @@ const Table: React.FC<PlayersPageProps> = ({
     }, {} as { [key: string]: Fixture[] });
   };
 
-  // Function to load more fixtures
-  const loadMoreFixtures = () => {
-    setIsLoading(true); // Start loading
-    const fixturesPerPage = 10;
-    const startIndex = (currentPage - 1) * fixturesPerPage;
-    const endIndex = startIndex + fixturesPerPage;
+  // Ensuring matchweeks are updated when seasonParam changes
+  useEffect(() => {
+    setMatchweeks([]);
+    setFixturesToShow([]);
+    setCurrentPage(1);
+    setHasMore(true);
+  }, [seasonParam]);
 
-    // Check if matchweeks or days are empty to prevent errors
-    const newFixturesToShow = matchweeks
-      .flatMap(
-        (matchweek) => matchweek.days?.flatMap((day) => day.fixtures) || []
-      )
-      .slice(startIndex, endIndex);
-
-    setFixturesToShow((prevFixtures) => [
-      ...prevFixtures,
-      ...newFixturesToShow,
-    ]);
-    setCurrentPage((prevPage) => prevPage + 1);
-
-    // Check if there are more fixtures to load
-    if (newFixturesToShow.length < fixturesPerPage) {
-      setHasMore(false);
+  // Initial render to load matchweeks and fixtures
+  useEffect(() => {
+    if (searchSeason) {
+      setMatchweeks(searchSeason.matchweeks || []);
     }
-    setIsLoading(false); // Finish loading
-  };
+  }, [searchSeason]);
 
   return (
     <div className="bg-white border-gray-100 border-[1px] p-3">
@@ -119,7 +138,7 @@ const Table: React.FC<PlayersPageProps> = ({
         dataLength={fixturesToShow.length}
         next={loadMoreFixtures}
         hasMore={hasMore}
-        loader={<div />}
+        loader={<div>Loading...</div>}
       >
         {Object.entries(groupFixturesByDay(fixturesToShow)).map(
           ([date, fixtures]) => (
@@ -191,7 +210,7 @@ const Table: React.FC<PlayersPageProps> = ({
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 0 1 1 8.965 3.525"
+                          d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 1 1 1 8.965 3.525"
                         />
                       </svg>
                       <h6 className="col-span-1 ml-2">{fixture.location}</h6>
