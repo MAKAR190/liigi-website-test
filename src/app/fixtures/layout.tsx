@@ -12,6 +12,7 @@ import { generalQuery, generalResponse } from "@/lib/queries";
 import { urlForImage } from "@/lib/utils";
 
 export async function generateMetadata(
+  { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const [general] = await Promise.all([
