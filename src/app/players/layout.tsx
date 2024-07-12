@@ -4,7 +4,6 @@ const roboto = Roboto({ subsets: ["latin"], weight: "400" });
 
 type Props = {
   params: {};
-  searchParams: { club: string; season: string; search: string };
 };
 
 import { sanityFetch } from "@/lib/fetch";
@@ -12,6 +11,7 @@ import { generalQuery, generalResponse } from "@/lib/queries";
 import { urlForImage } from "@/lib/utils";
 
 export async function generateMetadata(
+  { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const [general] = await Promise.all([
