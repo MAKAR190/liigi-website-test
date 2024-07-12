@@ -134,7 +134,7 @@ const Table: React.FC<PlayersPageProps> = ({
           dataLength={fixturesToShow.length}
           next={loadMoreFixtures}
           hasMore={hasMore}
-          loader={<div>Loading...</div>}
+          loader={<div></div>}
         >
           {Object.entries(groupFixturesByDay(fixturesToShow)).map(
             ([date, fixtures]) => (
@@ -252,13 +252,6 @@ const Table: React.FC<PlayersPageProps> = ({
           )}
         </InfiniteScroll>
       )}
-      {!isLoading &&
-        Object.entries(groupFixturesByDay(fixturesToShow)).length === 0 &&
-        matchweeks.length === 0 && (
-          <p className="text-center font-semibold my-5">
-            No fixtures found for this request
-          </p>
-        )}
     </div>
   );
 };
