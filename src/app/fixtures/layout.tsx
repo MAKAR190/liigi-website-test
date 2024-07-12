@@ -4,7 +4,6 @@ const roboto = Roboto({ subsets: ["latin"], weight: "400" });
 
 type Props = {
   params: {};
-  searchParams: { season: string; matchweek: string };
 };
 
 import { sanityFetch } from "@/lib/fetch";
