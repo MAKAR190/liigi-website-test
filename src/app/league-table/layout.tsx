@@ -1,10 +1,12 @@
 import type { Metadata, ResolvingMetadata } from "next";
 import { Roboto } from "next/font/google";
 const roboto = Roboto({ subsets: ["latin"], weight: "400" });
+
 type Props = {
   params: {};
-  searchParams: { season: string; };
+  searchParams: { season: string };
 };
+
 import { sanityFetch } from "@/lib/fetch";
 import { generalQuery, generalResponse } from "@/lib/queries";
 import { urlForImage } from "@/lib/utils";
@@ -32,13 +34,8 @@ export async function generateMetadata(
     },
   };
 }
-export default function Page({
-  children,
-  props,
-}: Readonly<{
-  children: React.ReactNode;
-  props: Props;
-}>) {
+
+export default function Page({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={roboto.className}>{children}</body>
