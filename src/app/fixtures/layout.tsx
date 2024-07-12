@@ -1,16 +1,18 @@
 import type { Metadata, ResolvingMetadata } from "next";
 import { Roboto } from "next/font/google";
 const roboto = Roboto({ subsets: ["latin"], weight: "400" });
+
 type Props = {
   params: {};
   searchParams: { season: string; matchweek: string };
 };
+
 import { sanityFetch } from "@/lib/fetch";
 import { generalQuery, generalResponse } from "@/lib/queries";
 import { urlForImage } from "@/lib/utils";
 
 export async function generateMetadata(
-  { params }: Props,
+  props: { params: Props["params"]; searchParams: Props["searchParams"] },
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const [general] = await Promise.all([
